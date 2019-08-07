@@ -1,64 +1,73 @@
 const { Component } = React;
 const { render } = ReactDOM;
-const main = document.querySelector('#root');
-const url = 'https://acme-users-api-rev.herokuapp.com/api/';
-
+const main = document.querySelector("#root");
+const url = "https://acme-users-api-rev.herokuapp.com/api/";
 
 class App extends Component {
-    constructor(){
-        super();
-        this.state = {
-            view:'Companies',
-            productCount: 0,
-            companyCount: 0
-        }
-    }
-    componentDidMount(){
-        window.addEventListener('hashchange', (ev) => {
-            const view = window.location.hash.slice(1);
-            this.setState({view});
-            console.log(view);
-        })
-    }
+  constructor() {
+    super();
+    this.state = {
+      view: "products",
+      products: [],
+      companies: []
+    };
+  }
+  componentDidMount() {
+    window.addEventListener("hashchange", ev => {
+      const view = window.location.hash.slice(1);
+      this.setState({ view });
+    });
 
-    render(){
-        const {productCount, companyCount, view} = this.state;
-        const productLink = React.createElement('li', null, `Products(${ productCount })`);
-        const companyLink = React.createElement('li', null, `Companies(${ companyCount })`);
-        const nav = React.createElement('nav', null, productLink, companyLink);
-        const content = React.createElement(List, {view})
-        console.log(view)
-        return React.createElement('div', null, nav, content);
-    }
+    Promise.all([
+      axios.get(`${url}products`),
+      axios.get(`${url}companies`)
+    ]).then(responses => {
+      const [productsResponse, companiesResponse] = responses;
+      this.setState({
+        products: productsResponse.data,
+        companies: companiesResponse.data
+      });
+    });
+  }
+
+  render() {
+    const { products, companies, view } = this.state;
+    const productLink = React.createElement(
+      "a",
+      { href: "#products", className: view === "products" ? "selected" : "" },
+      `Products(${products.length})`
+    );
+    const companyLink = React.createElement(
+      "a",
+      { href: "#companies", className: view === "companies" ? "selected" : "" },
+      `Companies(${companies.length})`
+    );
+    const nav = React.createElement("nav", null, productLink, companyLink);
+
+    const content = React.createElement(List, {
+      view,
+      items: view === "products" ? products : companies
+    });
+    return React.createElement("div", null, nav, content);
+  }
 }
 
-class List extends Component {
-    constructor(props){
-        super(props);
+const List = props => {
+  const { items, view } = props;
 
-        this.state = {
-            items:[],
-            view: props.view
-        }
-    }
-
-    componentDidMount(){
-        const {view} = this.state;
-        window.location.hash = view.toLowerCase();
-        axios.get(`${url}${view.toLowerCase()}`)
-            .then(response => {
-                const items = response.data;
-                console.log(items);
-                this.setState({items, waitingitems: false});
-            });
-        
-    }
-    render(){
-        const {items} = this.state;
-        const count = items.length;
-        return  items.map( item => React.createElement('li', {key: item.id}, item.name));
-    }
-}
-
+  // Products get description
+  if (view === "products") {
+    return items.map(item =>
+      React.createElement(
+        "li",
+        { key: item.id },
+        `${item.name} - ${item.description}`
+      )
+    );
+  }
+  return items.map(item =>
+    React.createElement("li", { key: item.id }, item.name)
+  );
+};
 
 render(React.createElement(App), main);

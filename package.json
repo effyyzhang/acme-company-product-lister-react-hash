@@ -1,0 +1,11 @@
+{
+  "name": "14-acme-company-product-lister-react-hash",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/effyyzhang/acme-company-product-lister-react-hash.git",
+  "author": "Jesen Tanadi <mail@jesentanadi.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^1.18.2"
+  }
+}
